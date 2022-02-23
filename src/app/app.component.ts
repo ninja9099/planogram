@@ -1,9 +1,16 @@
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {dia, layout, shapes, ui, util, V} from '@clientio/rappid';
-import {ProductCategories, ProductElement, ShelfElement, storeItemsConfig} from "./shapes";
+import {
+  getAllProducts,
+  getAllShelves,
+  ProductCategories,
+  ProductElement,
+  ShelfElement,
+  storeItemsConfig
+} from "./shapes";
 import { validateChangePosition, validateChangeSize, isSizeValid, isPositionValid } from './validators';
 import {addElementTools, removeElementTools} from "./tools";
-
+import * as  exampleGraph from  '../assets/example.json'
 
 @Component({
   selector: 'app-root',
@@ -13,6 +20,8 @@ import {addElementTools, removeElementTools} from "./tools";
 export class AppComponent implements OnInit, AfterViewInit {
 
   @ViewChild('canvas') canvas: ElementRef;
+  @ViewChild('stencilElement') stencilElement: ElementRef;
+  @ViewChild('shelvesStencilElement') shelvesStencilElement: ElementRef;
   private graph: dia.Graph;
   private paper: dia.Paper;
   private scroller: ui.PaperScroller;
@@ -23,6 +32,21 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
+
+  }
+
+  setElement(cellView: dia.CellView) {
+    this.selectedCellView = cellView;
+    addElementTools(cellView);
+  }
+
+  unsetElement(paper: dia.Paper) {
+    this.selectedCellView = null;
+    removeElementTools(paper);
+  }
+
+
+  public ngAfterViewInit(): void {
     const graph = this.graph = new dia.Graph({}, {cellNamespace: shapes});
     const PaperExtended = dia.Paper.extend({
       drawGrid: function (opt: any) {
@@ -55,25 +79,38 @@ export class AppComponent implements OnInit, AfterViewInit {
           options.height = gridSize * (ctm.d || 1) * (options.scaleFactor || 1);
 
           if (!refs.exist(id)) {
+            // @ts-ignore
             refs.add(id, V('pattern', {id: id, patternUnits: 'userSpaceOnUse'}, V(options.markup)));
           }
 
           var patternDefVel = refs.get(id);
 
+          // @ts-ignore
           if (util.isFunction(options.update)) {
+            // @ts-ignore
             options.update(patternDefVel.node.childNodes[0], options);
           }
 
+          // @ts-ignore
           var x = options.ox % options.width;
-          if (x < 0) x += options.width;
+          if (x < 0) { // @ts-ignore
+            x += options.width;
+          }
 
+          // @ts-ignore
           var y = options.oy % options.height;
-          if (y < 0) y += options.height;
+          if (y < 0) { // @ts-ignore
+            y += options.height;
+          }
+
+
 
           patternDefVel.attr({
             x: x,
             y: y,
+             // @ts-ignore
             width: options.width,
+             // @ts-ignore
             height: options.height
           });
         });
@@ -86,6 +123,8 @@ export class AppComponent implements OnInit, AfterViewInit {
         return this;
       },
     })
+    // @ts-ignore
+    // @ts-ignore
     const paper = new PaperExtended({
       width: 800,
       height: 600,
@@ -131,6 +170,7 @@ export class AppComponent implements OnInit, AfterViewInit {
           }
         }
       },
+       // @ts-ignore
       interactive: ({model}) => {
         const isChildOfSelectedElement = this.selectedCellView
           ? model.isEmbeddedIn(this.selectedCellView.model)
@@ -171,10 +211,12 @@ export class AppComponent implements OnInit, AfterViewInit {
           (acc, product) => Math.max(acc, product.width),
           0
         );
+        // @ts-ignore
         groups[categoryName] = {
           layout: layout(5 - maxWidth),
           closed: idx > 3,
           index: idx + 1,
+           // @ts-ignore
           label: ProductCategories[categoryName].toLowerCase()
         };
       });
@@ -207,12 +249,10 @@ export class AppComponent implements OnInit, AfterViewInit {
           ...group.layout as Object
         } as layout.GridLayout.Options);
       },
-      search: (product: ProductElement, keyword: string, group: string): boolean => {
-        return product.match(group, keyword);
-      }
+
     });
 
-    stencilElement.appendChild(productsStencil.el);
+    this.stencilElement.nativeElement.appendChild(productsStencil.el);
     productsStencil.render();
     productsStencil.load(getAllProducts())
 
@@ -234,7 +274,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       }
     });
 
-    shelvesStencilElement.appendChild(shelvesStencil.el);
+    this.shelvesStencilElement.nativeElement.appendChild(shelvesStencil.el);
     shelvesStencil.render();
     shelvesStencil.load(getAllShelves());
 
@@ -318,26 +358,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
       };
     };
-
     productsStencil.on(stencilEventMap(productsStencil));
     shelvesStencil.on(stencilEventMap(shelvesStencil));
-  }
-
-  setElement(cellView: dia.CellView) {
-    this.selectedCellView = cellView;
-    addElementTools(cellView);
-  }
-
-  unsetElement(paper: dia.Paper) {
-    this.selectedCellView = null;
-    removeElementTools(paper);
-  }
-
-
-  public ngAfterViewInit(): void {
-    const {scroller, paper, canvas} = this;
-    canvas.nativeElement.appendChild(this.scroller.el);
-    scroller.center();
-    paper.unfreeze();
   }
 }

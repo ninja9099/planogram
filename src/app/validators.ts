@@ -76,7 +76,8 @@ export const doesProductOverflow = (graph: dia.Graph, product: dia.Element): boo
 export const doProductsOverflow = (shelf: dia.Element): boolean => {
     const products = shelf.getEmbeddedCells();
     const shelfBBox = shelf.getBBox();
-    return products.some((product: dia.Element) => {
+    // @ts-ignore
+  return products.some((product: dia.Element) => {
         return !shelfBBox.containsRect(product.getBBox());
     });
 };

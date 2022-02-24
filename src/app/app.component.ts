@@ -10,7 +10,7 @@ import {
 } from "./shapes";
 import { validateChangePosition, validateChangeSize, isSizeValid, isPositionValid } from './validators';
 import {addElementTools, removeElementTools} from "./tools";
-import * as  exampleGraph from  '../assets/example.json'
+import  *  as  graphData  from  '../assets/example.json';
 
 @Component({
   selector: 'app-root',
@@ -254,7 +254,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     this.stencilElement.nativeElement.appendChild(productsStencil.el);
     productsStencil.render();
-    productsStencil.load(getAllProducts())
+    const x = getAllProducts();
+    productsStencil.load(x)
 
     const shelvesStencil = new ui.Stencil({
       paper: scroller,
@@ -278,7 +279,9 @@ export class AppComponent implements OnInit, AfterViewInit {
     shelvesStencil.render();
     shelvesStencil.load(getAllShelves());
 
-    graph.fromJSON(exampleGraph);
+    debugger;
+    let data = (graphData as any).default
+    graph.fromJSON(data);
 
     // Register Events
 

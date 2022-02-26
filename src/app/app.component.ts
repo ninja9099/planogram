@@ -8,9 +8,9 @@ import {
   ShelfElement,
   storeItemsConfig
 } from "./shapes";
-import { validateChangePosition, validateChangeSize, isSizeValid, isPositionValid } from './validators';
+import {validateChangePosition, validateChangeSize, isSizeValid, isPositionValid} from './validators';
 import {addElementTools, removeElementTools} from "./tools";
-import  *  as  graphData  from  '../assets/example.json';
+import *  as  graphData from '../assets/example.json';
 
 @Component({
   selector: 'app-root',
@@ -22,9 +22,12 @@ export class AppComponent implements OnInit, AfterViewInit {
   @ViewChild('canvas') canvas: ElementRef;
   @ViewChild('stencilElement') stencilElement: ElementRef;
   @ViewChild('shelvesStencilElement') shelvesStencilElement: ElementRef;
+
   private graph: dia.Graph;
   private paper: dia.Paper;
   private scroller: ui.PaperScroller;
+  private commandManager: dia.CommandManager;
+  private validator: dia.Validator;
   title = 'planogram';
   selectedCellView: dia.CellView | null;
 
@@ -32,22 +35,8 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-
-  }
-
-  setElement(cellView: dia.CellView) {
-    this.selectedCellView = cellView;
-    addElementTools(cellView);
-  }
-
-  unsetElement(paper: dia.Paper) {
-    this.selectedCellView = null;
-    removeElementTools(paper);
-  }
-
-
-  public ngAfterViewInit(): void {
-    const graph = this.graph = new dia.Graph({}, {cellNamespace: shapes});
+    var self = this;
+    this.graph = new dia.Graph({}, {cellNamespace: shapes});
     const PaperExtended = dia.Paper.extend({
       drawGrid: function (opt: any) {
 
@@ -104,13 +93,12 @@ export class AppComponent implements OnInit, AfterViewInit {
           }
 
 
-
           patternDefVel.attr({
             x: x,
             y: y,
-             // @ts-ignore
+            // @ts-ignore
             width: options.width,
-             // @ts-ignore
+            // @ts-ignore
             height: options.height
           });
         });
@@ -123,12 +111,10 @@ export class AppComponent implements OnInit, AfterViewInit {
         return this;
       },
     })
-    // @ts-ignore
-    // @ts-ignore
-    const paper = new PaperExtended({
+    this.paper = new PaperExtended({
       width: 800,
       height: 600,
-      model: graph,
+      model: self.graph,
       gridSize: 1,
       drawGrid: {name: 'mesh', color: '#d4d4d4'},
       background: {color: '#FBFBFB'},
@@ -139,15 +125,13 @@ export class AppComponent implements OnInit, AfterViewInit {
         if (childView.model instanceof ShelfElement) {
           return false;
         }
-        if (parentView.model instanceof ProductElement) {
-          return false;
-        }
-        return true;
+        return !(parentView.model instanceof ProductElement);
+
       },
       frontParentOnly: true,
       findParentBy: (elementView: { model: { getBBox: () => any; }; }) => {
         const area = elementView.model.getBBox();
-        return graph.findModelsInArea(area).filter((model) => {
+        return self.graph.findModelsInArea(area).filter((model) => {
           if (model instanceof ProductElement) {
             return true;
           }
@@ -170,7 +154,7 @@ export class AppComponent implements OnInit, AfterViewInit {
           }
         }
       },
-       // @ts-ignore
+      // @ts-ignore
       interactive: ({model}) => {
         const isChildOfSelectedElement = this.selectedCellView
           ? model.isEmbeddedIn(this.selectedCellView.model)
@@ -180,20 +164,37 @@ export class AppComponent implements OnInit, AfterViewInit {
         };
       }
     });
-
-    const scroller = this.scroller = new ui.PaperScroller({
+    const paper = this.paper
+    this.scroller = new ui.PaperScroller({
       paper,
       autoResizePaper: true,
       cursor: 'grab'
     });
-    const commandManager = new dia.CommandManager({
+    const graph = self.graph;
+    this.commandManager = new dia.CommandManager({
       graph
     });
-    const validator = new dia.Validator({
+    const commandManager = self.commandManager;
+    this.validator = new dia.Validator({
       commandManager,
       cancelInvalid: true
     });
+  }
 
+  setElement(cellView: dia.CellView) {
+    this.selectedCellView = cellView;
+    addElementTools(cellView);
+  }
+
+  unsetElement(paper: dia.Paper) {
+    this.selectedCellView = null;
+    removeElementTools(paper);
+  }
+
+
+  public ngAfterViewInit(): void {
+    this.canvas.nativeElement.appendChild(this.scroller.render().el);
+    this.scroller.adjustPaper().center();
     const createStencilGroups = (): Record<string, ui.Stencil.Group> => {
 
       const {products} = storeItemsConfig;
@@ -216,16 +217,15 @@ export class AppComponent implements OnInit, AfterViewInit {
           layout: layout(5 - maxWidth),
           closed: idx > 3,
           index: idx + 1,
-           // @ts-ignore
+          // @ts-ignore
           label: ProductCategories[categoryName].toLowerCase()
         };
       });
 
       return groups;
     };
-
     const productsStencil = new ui.Stencil({
-      paper: scroller,
+      paper: this.scroller,
       width: 240,
       scaleClones: true,
       dropAnimation: true,
@@ -251,14 +251,13 @@ export class AppComponent implements OnInit, AfterViewInit {
       },
 
     });
-
     this.stencilElement.nativeElement.appendChild(productsStencil.el);
     productsStencil.render();
     const x = getAllProducts();
     productsStencil.load(x)
 
     const shelvesStencil = new ui.Stencil({
-      paper: scroller,
+      paper: this.scroller,
       width: 340,
       height: 850,
       scaleClones: true,
@@ -279,46 +278,45 @@ export class AppComponent implements OnInit, AfterViewInit {
     shelvesStencil.render();
     shelvesStencil.load(getAllShelves());
 
-    debugger;
     let data = (graphData as any).default
-    graph.fromJSON(data);
+    this.graph.fromJSON(data);
 
     // Register Events
 
-    validator.validate('change:position', validateChangePosition(graph));
+    this.validator.validate('change:position', validateChangePosition(this.graph));
 
-    validator.validate('change:size', validateChangeSize(graph));
+    this.validator.validate('change:size', validateChangeSize(this.graph));
 
-    validator.on('invalid', (err: { cell: dia.Cell, msg: string }): void => {
-      const cellView = err.cell.findView(paper);
+    this.validator.on('invalid', (err: { cell: dia.Cell, msg: string }): void => {
+      const cellView = err.cell.findView(this.paper);
       if (cellView) {
         cellView.vel.removeClass('invalid');
       }
     });
 
-    graph.on({
+    this.graph.on({
       'batch:stop': (batch: Record<string, any>): void => {
         const {cell, batchName} = batch;
         if (batchName !== 'resize') return;
-        const cellView = cell.findView(paper);
-        cellView.vel.toggleClass('invalid', !isSizeValid(graph, cell));
+        const cellView = cell.findView(this.paper);
+        cellView.vel.toggleClass('invalid', !isSizeValid(this.graph, cell));
       }
     });
 
-    paper.on({
+    this.paper.on({
       'blank:pointerdown': (evt: dia.Event): void => {
-        this.unsetElement(paper);
-        scroller.startPanning(evt);
+        this.unsetElement(this.paper);
+        this.scroller.startPanning(evt);
       },
       'element:pointermove': (elementView: dia.ElementView, evt: dia.Event): void => {
         const {data} = evt;
         if (!data.moved) {
           data.currentCellView = elementView.getDelegatedView();
           data.moved = true;
-          this.unsetElement(paper);
+          this.unsetElement(this.paper);
         }
         const delegatedView = data.currentCellView;
-        delegatedView.vel.toggleClass('invalid', !isPositionValid(graph, delegatedView.model));
+        delegatedView.vel.toggleClass('invalid', !isPositionValid(this.graph, delegatedView.model));
       },
       'element:pointerup': (elementView: dia.ElementView, evt: dia.Event): void => {
         if (evt.data.moved) {
@@ -331,7 +329,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         const {model: element} = elementView;
         const parent = element.getParentCell();
         if (parent) {
-          this.setElement(parent.findView(paper));
+          this.setElement(parent.findView(this.paper));
         }
       }
     });
@@ -340,11 +338,11 @@ export class AppComponent implements OnInit, AfterViewInit {
       let self = this;
       return {
         'element:dragstart': function () {
-          self.unsetElement(paper);
+          self.unsetElement(self.paper);
         },
         'element:drag': function (cloneView: dia.ElementView, evt: dia.Event, _dropArea: dia.BBox, validDropTarget: boolean) {
           if (validDropTarget) {
-            cloneView.vel.toggleClass('invalid', !isPositionValid(graph, cloneView.model));
+            cloneView.vel.toggleClass('invalid', !isPositionValid(self.graph, cloneView.model));
             cloneView.vel.removeAttr('opacity');
           } else {
             cloneView.vel.removeClass('invalid');

@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, OnInit, ViewChild, ViewEncapsulation} from '@angular/core';
 import {dia, layout, shapes, ui, util, V} from '@clientio/rappid';
 import {
   getAllProducts,
@@ -23,11 +23,11 @@ export class AppComponent implements OnInit, AfterViewInit {
   @ViewChild('stencilElement') stencilElement: ElementRef;
   @ViewChild('shelvesStencilElement') shelvesStencilElement: ElementRef;
 
-  private graph: dia.Graph;
-  private paper: dia.Paper;
-  private scroller: ui.PaperScroller;
-  private commandManager: dia.CommandManager;
-  private validator: dia.Validator;
+  graph: dia.Graph;
+  paper: dia.Paper;
+  scroller: ui.PaperScroller;
+  commandManager: dia.CommandManager;
+  validator: dia.Validator;
   title = 'planogram';
   selectedCellView: dia.CellView | null;
 
@@ -56,10 +56,7 @@ export class AppComponent implements OnInit, AfterViewInit {
           var id = 'pattern_' + index;
           // @ts-ignore
           var options = util.merge(gridLayerSetting, localOptions[index], {
-            sx: ctm.a || 1,
-            sy: ctm.d || 1,
-            ox: ctm.e || 0,
-            oy: ctm.f || 0
+            sx: ctm.a || 1, sy: ctm.d || 1, ox: ctm.e || 0, oy: ctm.f || 0
           });
 
           // @ts-ignore
@@ -94,11 +91,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 
           patternDefVel.attr({
-            x: x,
-            y: y,
-            // @ts-ignore
-            width: options.width,
-            // @ts-ignore
+            x: x, y: y, // @ts-ignore
+            width: options.width, // @ts-ignore
             height: options.height
           });
         });
@@ -143,32 +137,35 @@ export class AppComponent implements OnInit, AfterViewInit {
       cellViewNamespace: shapes,
       highlighting: {
         embedding: {
-          name: 'stroke',
-          options: {
-            layer: 'front',
-            padding: 0,
-            attrs: {
-              'stroke': '#0058FF',
-              'stroke-width': 3
+          name: 'stroke', options: {
+            layer: 'front', padding: 0, attrs: {
+              'stroke': '#0058FF', 'stroke-width': 3
             }
           }
         }
-      },
-      // @ts-ignore
+      }, // @ts-ignore
       interactive: ({model}) => {
-        const isChildOfSelectedElement = this.selectedCellView
-          ? model.isEmbeddedIn(this.selectedCellView.model)
-          : false;
+        const isChildOfSelectedElement = this.selectedCellView ? model.isEmbeddedIn(this.selectedCellView.model) : false;
         return {
           stopDelegation: !isChildOfSelectedElement
         };
       }
+
     });
-    const paper = this.paper
+    var paper = this.paper
     this.scroller = new ui.PaperScroller({
+      // @ts-ignore
       paper,
       autoResizePaper: true,
-      cursor: 'grab'
+      cursor: 'grab',
+      baseWidth: 400,
+      baseHeight: 400,
+      scrollWhileDragging: true,
+      contentOptions: {
+        allowNewOrigin: 'any', padding: 1,
+        // maxWidth: 2500,
+        // maxHeight: 2500
+      }
     });
     const graph = self.graph;
     this.commandManager = new dia.CommandManager({
@@ -176,8 +173,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
     const commandManager = self.commandManager;
     this.validator = new dia.Validator({
-      commandManager,
-      cancelInvalid: true
+      commandManager, cancelInvalid: true
     });
   }
 
@@ -194,30 +190,22 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   public ngAfterViewInit(): void {
     this.canvas.nativeElement.appendChild(this.scroller.render().el);
-    this.scroller.adjustPaper().center();
+    this.scroller.adjustPaper()
     const createStencilGroups = (): Record<string, ui.Stencil.Group> => {
 
       const {products} = storeItemsConfig;
       const groups = {};
       const layout = (columnsCount: number): layout.GridLayout.Options => {
         return {
-          columns: columnsCount,
-          columnWidth: 200 / columnsCount,
-          rowHeight: 'compact'
+          columns: columnsCount, columnWidth: 200 / columnsCount, rowHeight: 'compact'
         }
       };
 
       Object.keys(products).forEach((categoryName: string, idx: number) => {
-        const maxWidth = products[categoryName].reduce(
-          (acc, product) => Math.max(acc, product.width),
-          0
-        );
+        const maxWidth = products[categoryName].reduce((acc, product) => Math.max(acc, product.width), 0);
         // @ts-ignore
         groups[categoryName] = {
-          layout: layout(5 - maxWidth),
-          closed: idx > 3,
-          index: idx + 1,
-          // @ts-ignore
+          layout: layout(5 - maxWidth), closed: idx > 3, index: idx + 1, // @ts-ignore
           label: ProductCategories[categoryName].toLowerCase()
         };
       });
@@ -234,9 +222,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       groups: createStencilGroups(),
       paperOptions: () => {
         return {
-          model: new dia.Graph({}, {cellNamespace: shapes}),
-          sorting: dia.Paper.sorting.NONE,
-          cellViewNamespace: shapes
+          model: new dia.Graph({}, {cellNamespace: shapes}), sorting: dia.Paper.sorting.NONE, cellViewNamespace: shapes
         };
       },
       layout: (graph: dia.Graph, group: ui.Stencil.Group) => {
@@ -245,8 +231,7 @@ export class AppComponent implements OnInit, AfterViewInit {
           marginX: 20,
           rowGap: 20,
           horizontalAlign: 'middle',
-          verticalAlign: 'middle',
-          ...group.layout as Object
+          verticalAlign: 'middle', ...group.layout as Object
         } as layout.GridLayout.Options);
       },
 
@@ -267,9 +252,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       layout: false,
       paperOptions: () => {
         return {
-          model: new dia.Graph({}, {cellNamespace: shapes}),
-          sorting: dia.Paper.sorting.NONE,
-          cellViewNamespace: shapes
+          model: new dia.Graph({}, {cellNamespace: shapes}), sorting: dia.Paper.sorting.NONE, cellViewNamespace: shapes
         };
       }
     });
@@ -307,8 +290,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       'blank:pointerdown': (evt: dia.Event): void => {
         this.unsetElement(this.paper);
         this.scroller.startPanning(evt);
-      },
-      'element:pointermove': (elementView: dia.ElementView, evt: dia.Event): void => {
+      }, 'element:pointermove': (elementView: dia.ElementView, evt: dia.Event): void => {
         const {data} = evt;
         if (!data.moved) {
           data.currentCellView = elementView.getDelegatedView();
@@ -317,15 +299,13 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
         const delegatedView = data.currentCellView;
         delegatedView.vel.toggleClass('invalid', !isPositionValid(this.graph, delegatedView.model));
-      },
-      'element:pointerup': (elementView: dia.ElementView, evt: dia.Event): void => {
+      }, 'element:pointerup': (elementView: dia.ElementView, evt: dia.Event): void => {
         if (evt.data.moved) {
           this.setElement(evt.data.currentCellView);
         } else {
           this.setElement(elementView);
         }
-      },
-      'element:pointerdblclick': (elementView: dia.ElementView): void => {
+      }, 'element:pointerdblclick': (elementView: dia.ElementView): void => {
         const {model: element} = elementView;
         const parent = element.getParentCell();
         if (parent) {

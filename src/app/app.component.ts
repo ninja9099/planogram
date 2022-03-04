@@ -1,4 +1,14 @@
-import {AfterViewInit, Component, ElementRef, OnInit, ViewChild, ViewEncapsulation} from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  ViewChild,
+  ViewEncapsulation
+} from '@angular/core';
 import {dia, layout, shapes, ui, util, V} from '@clientio/rappid';
 import {
   getAllProducts,
@@ -15,14 +25,16 @@ import *  as  graphData from '../assets/example.json';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit, AfterViewInit {
 
   @ViewChild('canvas') canvas: ElementRef;
   @ViewChild('stencilElement') stencilElement: ElementRef;
   @ViewChild('shelvesStencilElement') shelvesStencilElement: ElementRef;
-
+  @Input() Products: {};
+  @Output() graphJson: EventEmitter<any> = new EventEmitter();
+  @Output() toSVG: EventEmitter<any> = new EventEmitter();
   graph: dia.Graph;
   paper: dia.Paper;
   scroller: ui.PaperScroller;
@@ -31,28 +43,22 @@ export class AppComponent implements OnInit, AfterViewInit {
   title = 'planogram';
   selectedCellView: dia.CellView | null;
 
-  constructor() {
-  }
+  constructor() {}
 
   ngOnInit() {
     var self = this;
     this.graph = new dia.Graph({}, {cellNamespace: shapes});
     const PaperExtended = dia.Paper.extend({
       drawGrid: function (opt: any) {
-
         var gridSize = this.options.gridSize;
         gridSize = 76;
         if (gridSize <= 1) {
           return this.clearGrid();
         }
-
         var localOptions = Array.isArray(opt) ? opt : [opt];
-
         var ctm = this.matrix();
         var refs = this._getGridRefs();
-
         this._gridSettings.forEach(function (gridLayerSetting: any, index: string) {
-
           var id = 'pattern_' + index;
           // @ts-ignore
           var options = util.merge(gridLayerSetting, localOptions[index], {
@@ -162,8 +168,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       baseHeight: 400,
       scrollWhileDragging: true,
       contentOptions: {
-        allowNewOrigin: 'any', padding: 1,
-        // maxWidth: 2500,
+        allowNewOrigin: 'any', padding: 1, // maxWidth: 2500,
         // maxHeight: 2500
       }
     });
@@ -187,12 +192,9 @@ export class AppComponent implements OnInit, AfterViewInit {
     removeElementTools(paper);
   }
 
-
-  public ngAfterViewInit(): void {
+  ngAfterViewInit(): void {
     this.canvas.nativeElement.appendChild(this.scroller.render().el);
-    this.scroller.adjustPaper()
     const createStencilGroups = (): Record<string, ui.Stencil.Group> => {
-
       const {products} = storeItemsConfig;
       const groups = {};
       const layout = (columnsCount: number): layout.GridLayout.Options => {
@@ -241,25 +243,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     const x = getAllProducts();
     productsStencil.load(x)
 
-    const shelvesStencil = new ui.Stencil({
-      paper: this.scroller,
-      width: 340,
-      height: 850,
-      scaleClones: true,
-      dropAnimation: true,
-      usePaperGrid: true,
-      theme: 'modern',
-      layout: false,
-      paperOptions: () => {
-        return {
-          model: new dia.Graph({}, {cellNamespace: shapes}), sorting: dia.Paper.sorting.NONE, cellViewNamespace: shapes
-        };
-      }
-    });
 
-    this.shelvesStencilElement.nativeElement.appendChild(shelvesStencil.el);
-    shelvesStencil.render();
-    shelvesStencil.load(getAllShelves());
 
     let data = (graphData as any).default
     this.graph.fromJSON(data);
@@ -313,7 +297,6 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
       }
     });
-
     const stencilEventMap = (stencil: ui.Stencil) => {
       let self = this;
       return {
@@ -340,6 +323,13 @@ export class AppComponent implements OnInit, AfterViewInit {
       };
     };
     productsStencil.on(stencilEventMap(productsStencil));
-    shelvesStencil.on(stencilEventMap(shelvesStencil));
+  }
+
+  emitGraph(){
+    return this.graph.toJSON();
+  }
+
+  emitSVG() {
+    this.paper.toSVG((svg)=> this.toSVG.emit(svg));
   }
 }

@@ -1,6 +1,6 @@
 <router-outlet></router-outlet>
 <div class="container">
     <div id="products-stencil" #stencilElement></div>
-    <div id="canvas"  #canvas></div>
+    <div id="canvas"  #canvas (wheel)="handleMouseZoom($event)"></div>
     <div id="shelves-stencil"  #shelvesStencilElement></div>
 </div>

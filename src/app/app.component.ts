@@ -42,7 +42,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   validator: dia.Validator;
   title = 'planogram';
   selectedCellView: dia.CellView | null;
-
+  zoomScale = 50;
   constructor() {}
 
   ngOnInit() {
@@ -331,5 +331,27 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   emitSVG() {
     this.paper.toSVG((svg)=> this.toSVG.emit(svg));
+  }
+
+  zoomCanvas(value: number) {
+     this.scroller.zoom(value / 100, {absolute: true, grid: 20 / 100});
+  }
+
+
+  handleZoom(event: any){
+    let value = event.target.value;
+    this.zoomCanvas(value);
+  }
+
+  handleMouseZoom(event: WheelEvent){
+    debugger;
+    if (event.ctrlKey) {
+      event.preventDefault();
+      let wheelOffset = (event.deltaY / 25) * 4
+      this.zoomScale += wheelOffset;
+      // Restrict scale
+      this.zoomScale = Math.min(Math.max(20, this.zoomScale), 500);
+      this.zoomCanvas(this.zoomScale);
+        }
   }
 }

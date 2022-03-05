@@ -3,7 +3,7 @@ import {
 } from '@angular/core';
 import {dia, layout, shapes, ui, util, V} from '@clientio/rappid';
 import {
-  getAllProducts, getAllShelves, Product, ProductCategories, ProductElement, ShelfElement, storeItemsConfig
+  getAllProducts, getAllShelves, Product, ProductElement, ShelfElement, storeItemsConfig
 } from "./shapes";
 import {validateChangePosition, validateChangeSize, isSizeValid, isPositionValid} from './validators';
 import {addElementTools, removeElementTools} from "./tools";
@@ -29,9 +29,35 @@ export class AppComponent implements OnInit, AfterViewInit {
   title = 'planogram';
   selectedCellView: dia.CellView | null;
   zoomScale = 50;
-
-  constructor() {
-  }
+  productCatalouge = {
+    products: {
+        chips: [
+            {
+                product_id: 1,
+                width: 189,
+                height: 230,
+                name: 'chips1',
+                image: "https://assets-staging.nail-biter.com/client_356/product_25/images/35101.png"
+            },
+            {
+                product_id: 2,
+                width: 200,
+                height: 310,
+                name: 'chips2',
+                image: "https://assets-staging.nail-biter.com/client_337/product_101/images/69219.png"
+            },
+            {
+                product_id: 3,
+                width: 200,
+                height: 310,
+                name: 'chips3',
+                image: "https://assets-staging.nail-biter.com/client_337/product_105/images/19977.png"
+            }
+        ],
+    }
+}
+  productCategories: Record<string, string> = {};
+  constructor() {}
 
   ngOnInit() {
     var self = this;
@@ -168,6 +194,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.validator = new dia.Validator({
       commandManager, cancelInvalid: true
     });
+    this.buidlProductCategories(Object.keys(this.productCatalouge.products))
     this.productsStencil = new ui.Stencil({
       paper: this.scroller,
       width: 240,
@@ -175,7 +202,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       dropAnimation: true,
       usePaperGrid: true,
       theme: 'modern',
-      groups: this.createStencilGroups(this.Products || []),
+      groups: this.createStencilGroups(this.productCatalouge.products),
       paperOptions: () => {
         return {
           model: new dia.Graph({}, {cellNamespace: shapes}), sorting: dia.Paper.sorting.NONE, cellViewNamespace: shapes
@@ -217,24 +244,29 @@ export class AppComponent implements OnInit, AfterViewInit {
         // @ts-ignore
         groups[categoryName] = {
           layout: layout(5 - maxWidth), closed: idx > 3, index: idx + 1, // @ts-ignore
-          label: ProductCategories[categoryName].toLowerCase()
+          label: this.productCategories[categoryName].toLowerCase()
         };
       });
       return groups;
     };
 
+  buidlProductCategories(productCategories: string[]){
+    for (let cat in productCategories) {
+        let key = productCategories[cat]
+        this.productCategories[key] = key.toUpperCase();
+    }
+}
 
   ngAfterViewInit(): void {
     this.canvas.nativeElement.appendChild(this.scroller.render().el);
     this.stencilElement.nativeElement.appendChild(this.productsStencil.el);
     this.productsStencil.render();
-    const x = getAllProducts();
+    const x = getAllProducts(this.productCatalouge.products);
+
     this.productsStencil.load(x)
     let data = (graphData as any).default
     this.graph.fromJSON(data);
-
     // Register Events
-
     this.validator.validate('change:position', validateChangePosition(this.graph));
 
     this.validator.validate('change:size', validateChangeSize(this.graph));

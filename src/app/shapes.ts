@@ -20,25 +20,12 @@ export enum ShelfTypes {
     full = 'FULL',
 }
 
-export enum ProductCategories {
-    chips = 'CHIPS',
-    nachos = 'NACHOS',
-    bombay_mix = 'BOMBAY MIX',
-    snacks = 'SNACKS',
-    candy = 'CANDY',
-    sports_drink = 'SPORTS DRINK',
-    soda = 'SODA',
-    cordial = 'CORDIAL',
-    cola = 'COLA',
-    pop = 'POP',
-    ice_tea = 'ICE TEA',
-}
-
 interface StoreItemsConfig {
     grid: number;
     shelves: Shelf[];
-    products: Record<string, Product[]>;
+    // products: Record<string, Product[]>;
 }
+
 
 export const storeItemsConfig: StoreItemsConfig = {
     grid: 30,
@@ -48,81 +35,20 @@ export const storeItemsConfig: StoreItemsConfig = {
         { width: 10, height: 5, shelfType: ShelfTypes.middle },
         { width: 10, height: 5, shelfType: ShelfTypes.bottom }
     ],
-    products: {
-        chips: [
-            { width: 2, height: 3, name: 'chips1', image: 'assets/products/chips/1.svg' },
-            { width: 2, height: 3, name: 'chips2', image: 'assets/products/chips/2.svg' },
-            { width: 2, height: 3, name: 'chips3', image: 'assets/products/chips/3.svg' }
-        ],
-        nachos: [
-            { width: 2, height: 3, name: 'nachos1', image: 'assets/products/nachos/1.svg' },
-            { width: 2, height: 3, name: 'nachos2', image: 'assets/products/nachos/2.svg' },
-            { width: 2, height: 3, name: 'nachos3', image: 'assets/products/nachos/3.svg' }
-        ],
-        bombay_mix: [
-            { width: 2, height: 3, name: 'bombay_mix1', image: 'assets/products/bombay_mix/1.svg' },
-            { width: 2, height: 3, name: 'bombay_mix2', image: 'assets/products/bombay_mix/2.svg' },
-            { width: 2, height: 3, name: 'bombay_mix3', image: 'assets/products/bombay_mix/3.svg' }
-        ],
-        snacks: [
-            { width: 2, height: 2, name: 'nuts', image: 'assets/products/snacks/1.svg' },
-            { width: 2, height: 2, name: 'biscuit', image: 'assets/products/snacks/2.svg' },
-            { width: 2, height: 3, name: 'chocolate', image: 'assets/products/snacks/3.svg' },
-        ],
-        candy: [
-            { width: 2, height: 3, name: 'candy1', image: 'assets/products/candy/1.svg' },
-            { width: 2, height: 3, name: 'candy2', image: 'assets/products/candy/2.svg' },
-            { width: 2, height: 3, name: 'candy3', image: 'assets/products/candy/3.svg' }
-        ],
-        sports_drink: [
-            { width: 1, height: 3, name: 'sports_drink1', image: 'assets/products/sports_drink/1.svg' },
-            { width: 1, height: 3, name: 'sports_drink2', image: 'assets/products/sports_drink/2.svg' },
-            { width: 1, height: 3, name: 'sports_drink3', image: 'assets/products/sports_drink/3.svg' },
-            { width: 1, height: 3, name: 'sports_drink4', image: 'assets/products/sports_drink/4.svg' },
-            { width: 1, height: 3, name: 'sports_drink5', image: 'assets/products/sports_drink/5.svg' }
-        ],
-        soda: [
-            { width: 1, height: 2, name: 'soda1', image: 'assets/products/soda/1.svg' },
-            { width: 1, height: 2, name: 'soda2', image: 'assets/products/soda/2.svg' },
-            { width: 1, height: 2, name: 'soda3', image: 'assets/products/soda/3.svg' }
-        ],
-        cordial: [
-            { width: 1, height: 4, name: 'cordial1', image: 'assets/products/cordial/1.svg' },
-            { width: 1, height: 4, name: 'cordial2', image: 'assets/products/cordial/2.svg' },
-            { width: 1, height: 4, name: 'cordial3', image: 'assets/products/cordial/3.svg' }
-        ],
-        cola: [
-            { width: 1, height: 3, name: 'cola1', image: 'assets/products/cola/1.svg' },
-            { width: 1, height: 3, name: 'cola2', image: 'assets/products/cola/2.svg' }
-        ],
-        pop: [
-            { width: 1, height: 3, name: 'pop1', image: 'assets/products/pop/1.svg' },
-            { width: 1, height: 3, name: 'pop2', image: 'assets/products/pop/2.svg' },
-            { width: 1, height: 3, name: 'pop3', image: 'assets/products/pop/3.svg' }
-        ],
-        ice_tea: [
-            { width: 1, height: 3, name: 'ice_tea1', image: 'assets/products/ice_tea/1.svg' },
-            { width: 1, height: 3, name: 'ice_tea2', image: 'assets/products/ice_tea/2.svg' },
-            { width: 1, height: 3, name: 'ice_tea3', image: 'assets/products/ice_tea/3.svg' },
-            { width: 1, height: 3, name: 'ice_tea4', image: 'assets/products/ice_tea/4.svg' }
-        ]
-    }
 };
 
 
-export const getAllProducts = (): Record<string, ProductElement[]> => {
-    const products = {};
-    Object.keys(storeItemsConfig.products).forEach((category: string) => {
-        const productCategory = storeItemsConfig.products[category];
-        productCategory.forEach((product: Product) => {
+export const getAllProducts = (products: Record<string, Product[]>): Record<string, ProductElement[]> => {
+    let prdcts: Record<string, ProductElement[]> = {};
+    Object.keys(products).forEach((category) => {
+        const productCategory = products[category];
+        productCategory.forEach((product) => {
             const productShape = ProductElement.create(product);
-            // @ts-ignore
-          products[category] = products[category] || [];
-            // @ts-ignore
-          products[category].push(productShape);
+            prdcts[category] = prdcts[category] || [];
+            prdcts[category].push(productShape);
         });
     });
-    return products;
+    return prdcts;
 };
 
 export const getAllShelves = (shelves: Shelf[]): ShelfElement[] => {
@@ -305,7 +231,7 @@ export class ProductElement extends dia.Element {
     public match(group: string, keyword: string) {
         if (this.get('productType').includes(keyword.toLowerCase())) return true;
         // @ts-ignore
-      if (ProductCategories[group].includes(keyword.toUpperCase())) return true;
+        if (ProductCategories[group].includes(keyword.toUpperCase())) return true;
         return false;
     }
 

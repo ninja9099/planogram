@@ -1,6 +1,8 @@
 <router-outlet></router-outlet>
+<button (click)="addShelf('TOP')">Add</button>
 <div class="container">
     <div id="products-stencil" #stencilElement></div>
     <div id="canvas"  #canvas (wheel)="handleMouseZoom($event)"></div>
     <div id="shelves-stencil"  #shelvesStencilElement></div>
+
 </div>

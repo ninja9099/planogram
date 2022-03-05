@@ -1,38 +1,23 @@
 import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  EventEmitter,
-  Input,
-  OnInit,
-  Output,
-  ViewChild,
-  ViewEncapsulation
+  AfterViewInit, Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild, ViewEncapsulation
 } from '@angular/core';
 import {dia, layout, shapes, ui, util, V} from '@clientio/rappid';
 import {
-  getAllProducts,
-  getAllShelves,
-  ProductCategories,
-  ProductElement,
-  ShelfElement,
-  storeItemsConfig
+  getAllProducts, getAllShelves, Product, ProductCategories, ProductElement, ShelfElement, storeItemsConfig
 } from "./shapes";
 import {validateChangePosition, validateChangeSize, isSizeValid, isPositionValid} from './validators';
 import {addElementTools, removeElementTools} from "./tools";
 import *  as  graphData from '../assets/example.json';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
+  selector: 'app-root', templateUrl: './app.component.html', styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit, AfterViewInit {
 
   @ViewChild('canvas') canvas: ElementRef;
   @ViewChild('stencilElement') stencilElement: ElementRef;
   @ViewChild('shelvesStencilElement') shelvesStencilElement: ElementRef;
-  @Input() Products: {};
+  @Input() Products: Record<string, Product[]>;
   @Output() graphJson: EventEmitter<any> = new EventEmitter();
   @Output() toSVG: EventEmitter<any> = new EventEmitter();
   graph: dia.Graph;
@@ -40,10 +25,13 @@ export class AppComponent implements OnInit, AfterViewInit {
   scroller: ui.PaperScroller;
   commandManager: dia.CommandManager;
   validator: dia.Validator;
+  productsStencil: ui.Stencil;
   title = 'planogram';
   selectedCellView: dia.CellView | null;
   zoomScale = 50;
-  constructor() {}
+
+  constructor() {
+  }
 
   ngOnInit() {
     var self = this;
@@ -180,48 +168,14 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.validator = new dia.Validator({
       commandManager, cancelInvalid: true
     });
-  }
-
-  setElement(cellView: dia.CellView) {
-    this.selectedCellView = cellView;
-    addElementTools(cellView);
-  }
-
-  unsetElement(paper: dia.Paper) {
-    this.selectedCellView = null;
-    removeElementTools(paper);
-  }
-
-  ngAfterViewInit(): void {
-    this.canvas.nativeElement.appendChild(this.scroller.render().el);
-    const createStencilGroups = (): Record<string, ui.Stencil.Group> => {
-      const {products} = storeItemsConfig;
-      const groups = {};
-      const layout = (columnsCount: number): layout.GridLayout.Options => {
-        return {
-          columns: columnsCount, columnWidth: 200 / columnsCount, rowHeight: 'compact'
-        }
-      };
-
-      Object.keys(products).forEach((categoryName: string, idx: number) => {
-        const maxWidth = products[categoryName].reduce((acc, product) => Math.max(acc, product.width), 0);
-        // @ts-ignore
-        groups[categoryName] = {
-          layout: layout(5 - maxWidth), closed: idx > 3, index: idx + 1, // @ts-ignore
-          label: ProductCategories[categoryName].toLowerCase()
-        };
-      });
-
-      return groups;
-    };
-    const productsStencil = new ui.Stencil({
+    this.productsStencil = new ui.Stencil({
       paper: this.scroller,
       width: 240,
       scaleClones: true,
       dropAnimation: true,
       usePaperGrid: true,
       theme: 'modern',
-      groups: createStencilGroups(),
+      groups: this.createStencilGroups(this.Products || []),
       paperOptions: () => {
         return {
           model: new dia.Graph({}, {cellNamespace: shapes}), sorting: dia.Paper.sorting.NONE, cellViewNamespace: shapes
@@ -238,13 +192,44 @@ export class AppComponent implements OnInit, AfterViewInit {
       },
 
     });
-    this.stencilElement.nativeElement.appendChild(productsStencil.el);
-    productsStencil.render();
+  }
+
+  setElement(cellView: dia.CellView) {
+    this.selectedCellView = cellView;
+    addElementTools(cellView);
+  }
+
+  unsetElement(paper: dia.Paper) {
+    this.selectedCellView = null;
+    removeElementTools(paper);
+  }
+
+  createStencilGroups(products: Record<string, Product[]>): Record<string, ui.Stencil.Group> {
+      const groups = {};
+      const layout = (columnsCount: number): layout.GridLayout.Options => {
+        return {
+          columns: columnsCount, columnWidth: 200 / columnsCount, rowHeight: 'compact'
+        }
+      };
+
+      Object.keys(products).forEach((categoryName: string, idx: number) => {
+        const maxWidth = products[categoryName].reduce((acc, product) => Math.max(acc, product.width), 0);
+        // @ts-ignore
+        groups[categoryName] = {
+          layout: layout(5 - maxWidth), closed: idx > 3, index: idx + 1, // @ts-ignore
+          label: ProductCategories[categoryName].toLowerCase()
+        };
+      });
+      return groups;
+    };
+
+
+  ngAfterViewInit(): void {
+    this.canvas.nativeElement.appendChild(this.scroller.render().el);
+    this.stencilElement.nativeElement.appendChild(this.productsStencil.el);
+    this.productsStencil.render();
     const x = getAllProducts();
-    productsStencil.load(x)
-
-
-
+    this.productsStencil.load(x)
     let data = (graphData as any).default
     this.graph.fromJSON(data);
 
@@ -322,29 +307,28 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
       };
     };
-    productsStencil.on(stencilEventMap(productsStencil));
+    this.productsStencil.on(stencilEventMap(this.productsStencil));
+    this.zoomCanvas(this.zoomScale);
   }
 
-  emitGraph(){
+  emitGraph() {
     return this.graph.toJSON();
   }
 
   emitSVG() {
-    this.paper.toSVG((svg)=> this.toSVG.emit(svg));
+    this.paper.toSVG((svg) => this.toSVG.emit(svg));
   }
 
   zoomCanvas(value: number) {
-     this.scroller.zoom(value / 100, {absolute: true, grid: 20 / 100});
+    this.scroller.zoom(value / 100, {absolute: true, grid: 20 / 100});
   }
 
-
-  handleZoom(event: any){
-    let value = event.target.value;
-    this.zoomCanvas(value);
+  handleSliderZoom(event: any) {
+    this.zoomScale = event.target.value;
+    this.zoomCanvas(this.zoomScale);
   }
 
-  handleMouseZoom(event: WheelEvent){
-    debugger;
+  handleMouseZoom(event: WheelEvent) {
     if (event.ctrlKey) {
       event.preventDefault();
       let wheelOffset = (event.deltaY / 25) * 4
@@ -352,6 +336,24 @@ export class AppComponent implements OnInit, AfterViewInit {
       // Restrict scale
       this.zoomScale = Math.min(Math.max(20, this.zoomScale), 500);
       this.zoomCanvas(this.zoomScale);
-        }
+    }
+  }
+
+  adjustCanvasPaper() {
+    this.scroller.adjustPaper().center();
+  }
+
+  addShelf(type: string) {
+    let shelves_items = getAllShelves(storeItemsConfig.shelves)
+    let cpy = shelves_items.filter(item => item.attributes['shelfType'] === type)[0].clone();
+    cpy.addTo(this.graph);
+  }
+
+  undoRedo(action: "undo" | "redo") {
+    if (action === 'undo') {
+      this.commandManager.undo();
+    } else {
+      this.commandManager.redo();
+    }
   }
 }

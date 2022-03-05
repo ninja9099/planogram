@@ -125,8 +125,8 @@ export const getAllProducts = (): Record<string, ProductElement[]> => {
     return products;
 };
 
-export const getAllShelves = (): ShelfElement[] => {
-    return Object.values(storeItemsConfig.shelves).map(shelf => {
+export const getAllShelves = (shelves: Shelf[]): ShelfElement[] => {
+    return Object.values(shelves).map(shelf => {
         switch (shelf.shelfType) {
             case ShelfTypes.full:
                 return ShelfElement.create(shelf)

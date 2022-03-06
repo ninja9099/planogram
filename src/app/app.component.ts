@@ -270,7 +270,9 @@ export class AppComponent implements OnInit, AfterViewInit {
       groups: this.createStencilGroups(this.productCatalouge.products),
       paperOptions: () => {
         return {
-          model: new dia.Graph({}, {cellNamespace: shapes}), sorting: dia.Paper.sorting.NONE, cellViewNamespace: shapes
+          model: new dia.Graph({}, {cellNamespace: shapes}),
+          sorting: dia.Paper.sorting.NONE,
+          cellViewNamespace: shapes
         };
       },
       layout: (graph: dia.Graph, group: ui.Stencil.Group) => {
@@ -279,10 +281,18 @@ export class AppComponent implements OnInit, AfterViewInit {
           marginX: 20,
           rowGap: 20,
           horizontalAlign: 'middle',
-          verticalAlign: 'middle', ...group.layout as Object
+          verticalAlign: 'middle',
+          ...group.layout as Object
         } as layout.GridLayout.Options);
       },
-
+      dragStartClone: (el) => {
+          let element = el.clone();
+          element.set('productSize', el.get('originalSize'))
+          let {width, height} = element.get("productSize");
+          element.set('size', {width, height})
+          // element.attr('image/xlinkHref', el.attributes.attrs.body.productImage);
+          return element
+          }
     });
     this.snaplines = new ui.Snaplines({
         paper: paper,
@@ -380,6 +390,9 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     this.paper.on({
       'blank:pointerdown': (evt: dia.Event): void => {
+        if (evt.shiftKey) {
+          return;
+        }
         this.unsetElement(this.paper);
         this.scroller.startPanning(evt);
       },

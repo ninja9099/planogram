@@ -1,5 +1,5 @@
 import { dia, elementTools, ui } from '@clientio/rappid';
-import { ProductElement, ShelfTypes } from './shapes';
+import {ProductElement, ShelfTypes, storeItemsConfig} from './shapes';
 
 export function addElementTools(cellView: dia.CellView): void {
 
@@ -13,12 +13,12 @@ export function addElementTools(cellView: dia.CellView): void {
     let resizeGrid;
 
     if (cell instanceof ProductElement) {
-       // const { width, height } = cell.get('productSize');
+       const { width, height } = cell.get('productSize');
         padding = 0;
         offset = { x: 14, y: -14 };
         resizeGrid = {
-            // width: width * storeItemsConfig.grid,
-            // height: height * storeItemsConfig.grid
+            width: width * storeItemsConfig.grid,
+            height: height * storeItemsConfig.grid
         };
     } else {
         switch (cell.get('shelfType')) {
@@ -52,7 +52,7 @@ export function addElementTools(cellView: dia.CellView): void {
         resizeGrid,
         allowRotation: false,
         padding,
-        theme: 'material'
+        theme: 'default'
     });
 
     const toolsView = new dia.ToolsView({

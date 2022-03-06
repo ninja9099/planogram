@@ -65,6 +65,9 @@ export const getAllShelves = (shelves: Shelf[]): ShelfElement[] => {
                 return ShelfElement.create(shelf)
                     .attr(['top', 'display'], 'block')
                     .translate(20, 280);
+            case ShelfTypes.priceTag:
+                return ShelfElement.create(shelf)
+                    .translate(20, 20);
             case ShelfTypes.bottom:
                 return ShelfElement.create(shelf)
                     .attr(['bottom', 'display'], 'block')
@@ -212,7 +215,10 @@ export class ProductElement extends dia.Element {
   override markup = [{
         tagName: 'rect',
         selector: 'body'
-    }]
+      },{
+        tagName: 'text',
+        selector: 'label'
+      }]
 
   override defaults() {
         return {
@@ -277,7 +283,7 @@ export class ProductElement extends dia.Element {
     }
 
     static create(product: Product): ProductElement {
-         let {name, width, height, image, product_id} = product;
+        let {name, width, height, image, product_id} = product;
         let aspectRatio = product.width/product.height;
         // let stencilProductSize = { width: 90 * aspectRatio , height: 90};
         let scale = 3;
@@ -296,6 +302,15 @@ export class ProductElement extends dia.Element {
             attrs: {
                 body: {
                     productImage: image
+                },
+              label: {
+                    textVerticalAnchor: 'middle',
+                    textAnchor: 'middle',
+                    refX: '40%',
+                    refY: '0',
+                    fontSize: 14,
+                    fill: 'black',
+                    fontFamily: 'Roboto',
                 }
             }
         });

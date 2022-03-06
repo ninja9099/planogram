@@ -23,6 +23,14 @@ export const validateChangeSize = (graph: dia.Graph) => (err: Error, command: an
 };
 
 // Checks
+export const isSizeNotMultipleOfOriginal = (element:any) => {
+    debugger
+    let originalSize = element.get('originalSize');
+    let currentSize = element.get('size');
+    return currentSize.width % originalSize.width !== 0 ||
+        currentSize.height % originalSize.height !== 0;
+
+}
 
 export const isSizeValid = (graph: dia.Graph, element: dia.Element): boolean => {
     if (element.get('type') === 'app.Shelf') {
@@ -30,7 +38,11 @@ export const isSizeValid = (graph: dia.Graph, element: dia.Element): boolean => 
             return false;
         }
     } else {
-        if (doesProductOverflow(graph, element) || doesProductOverlap(graph, element)) {
+        if (
+          doesProductOverflow(graph, element) ||
+          doesProductOverlap(graph, element) ||
+          isSizeNotMultipleOfOriginal(element)
+          ) {
             return false;
         }
     }

@@ -188,7 +188,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.paper = new PaperExtended({
       width: 800,
       height: 600,
-      model: self.graph,
+      model: this.graph,
       gridSize: 1,
       drawGrid: {name: 'mesh', color: '#d4d4d4'},
       background: {color: '#FBFBFB'},
@@ -217,9 +217,13 @@ export class AppComponent implements OnInit, AfterViewInit {
       cellViewNamespace: shapes,
       highlighting: {
         embedding: {
-          name: 'stroke', options: {
-            layer: 'front', padding: 0, attrs: {
-              'stroke': '#0058FF', 'stroke-width': 3
+          name: 'stroke',
+          options: {
+            layer: 'front',
+            padding: 0,
+            attrs: {
+              'stroke': '#0058FF',
+              'stroke-width': 3
             }
           }
         }
@@ -232,7 +236,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       }
 
     });
-    var paper = this.paper
+    let  paper = this.paper
     this.scroller = new ui.PaperScroller({
       paper,
       autoResizePaper: true,
@@ -360,10 +364,17 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     this.graph.on({
       'batch:stop': (batch: Record<string, any>): void => {
-        const {cell, batchName} = batch;
-        if (batchName !== 'resize') return;
-        const cellView = cell.findView(this.paper);
-        cellView.vel.toggleClass('invalid', !isSizeValid(this.graph, cell));
+        try{
+          const {cell, batchName} = batch;
+          if (batchName !== 'resize') {
+            return;
+          }
+          const cellView = cell.findView(this.paper);
+          cellView.vel.toggleClass('invalid', !isSizeValid(this.graph, cell));
+        } catch (e) {
+          console.log("error is " + String(e))
+        }
+
       }
     });
 
@@ -371,7 +382,8 @@ export class AppComponent implements OnInit, AfterViewInit {
       'blank:pointerdown': (evt: dia.Event): void => {
         this.unsetElement(this.paper);
         this.scroller.startPanning(evt);
-      }, 'element:pointermove': (elementView: dia.ElementView, evt: dia.Event): void => {
+      },
+      'element:pointermove': (elementView: dia.ElementView, evt: dia.Event): void => {
         const {data} = evt;
         if (!data.moved) {
           data.currentCellView = elementView.getDelegatedView();
@@ -380,19 +392,51 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
         const delegatedView = data.currentCellView;
         delegatedView.vel.toggleClass('invalid', !isPositionValid(this.graph, delegatedView.model));
-      }, 'element:pointerup': (elementView: dia.ElementView, evt: dia.Event): void => {
+      },
+      'element:pointerup': (elementView: dia.ElementView, evt: dia.Event): void => {
         if (evt.data.moved) {
           this.setElement(evt.data.currentCellView);
         } else {
           this.setElement(elementView);
         }
-      }, 'element:pointerdblclick': (elementView: dia.ElementView): void => {
+      },
+      'element:pointerdblclick': (elementView: dia.ElementView): void => {
         const {model: element} = elementView;
         const parent = element.getParentCell();
         if (parent) {
           this.setElement(parent.findView(this.paper));
         }
-      }
+      },
+      'cell:pointerup': (cellView) => {
+            if (cellView.model instanceof dia.Link) return;
+            const halo = new ui.Halo({
+                cellView: cellView,
+                boxContent: function (elementView, boxElement) {
+                    let tmpl = util.template('W: <%= width %>&#34; , H: <%= height %>&#34;');
+                    let element = elementView.model;
+                    let bbox = element.getBBox();
+                    return tmpl({
+                        // width: bbox.width,
+                        // height: bbox.height,
+                        width: (bbox.width / 25.4).toFixed(1),
+                        height: (bbox.height / 25.4).toFixed(1),
+                    });
+                },
+            });
+            halo.removeHandle('rotate');
+            halo.removeHandle('resize');
+            halo.removeHandle('fork');
+            halo.removeHandle('link');
+            halo.removeHandle('unlink');
+            halo.removeHandle('remove');
+            // @ts-ignore
+            halo.changeHandle('clone', {position: 'se'});
+            if (this.planogramMode === 'readonly') {
+                halo.removeHandle('clone')
+            }
+            halo.render();
+
+        }
     });
     const stencilEventMap = (stencil: ui.Stencil) => {
       let self = this;

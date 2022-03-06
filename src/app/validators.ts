@@ -41,8 +41,8 @@ export const isSizeValid = (graph: dia.Graph, element: dia.Element): boolean => 
         if (
           doesProductOverflow(graph, element) ||
           doesProductOverlap(graph, element)
-          // ||
-          // isSizeNotMultipleOfOriginal(element)
+          ||
+          isSizeNotMultipleOfOriginal(element)
           ) {
             return false;
         }

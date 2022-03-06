@@ -18,6 +18,7 @@ export enum ShelfTypes {
     middle = 'MIDDLE',
     bottom = 'BOTTOM',
     full = 'FULL',
+    priceTag = 'PRICETAG'
 }
 
 interface StoreItemsConfig {
@@ -27,14 +28,14 @@ interface StoreItemsConfig {
 }
 
 
-export const storeItemsConfig: StoreItemsConfig = {
-    grid: 30,
+export const storeItemsConfig = {
+    grid: 1,
     shelves: [
-        { width: 10, height: 5, shelfType: ShelfTypes.full },
-        { width: 10, height: 5, shelfType: ShelfTypes.top },
-        { width: 10, height: 5, shelfType: ShelfTypes.middle },
-        { width: 10, height: 5, shelfType: ShelfTypes.bottom }
-    ],
+        {width: 914, height: 406, shelfType: ShelfTypes.top},
+        {width: 914, height: 406, shelfType: ShelfTypes.middle},
+        {width: 914, height: 406, shelfType: ShelfTypes.bottom},
+        {width: 914, height: 80, shelfType: ShelfTypes.priceTag},
+    ]
 };
 
 
@@ -76,10 +77,9 @@ export const getAllShelves = (shelves: Shelf[]): ShelfElement[] => {
 }
 
 const calcSize = (size: dia.Size): dia.Size => {
-    const { grid } = storeItemsConfig;
     return {
-        width: size.width * grid,
-        height: size.height * grid
+        width: size.width * 1,
+        height: size.height * 1
     };
 };
 

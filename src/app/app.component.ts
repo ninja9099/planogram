@@ -18,6 +18,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   @ViewChild('stencilElement') stencilElement: ElementRef;
   @ViewChild('shelvesStencilElement') shelvesStencilElement: ElementRef;
   @Input() Products: Record<string, Product[]>;
+  @Input() graphData: object;
   @Output() graphJson: EventEmitter<any> = new EventEmitter();
   @Output() toSVG: EventEmitter<any> = new EventEmitter();
   graph: dia.Graph;
@@ -26,6 +27,8 @@ export class AppComponent implements OnInit, AfterViewInit {
   commandManager: dia.CommandManager;
   validator: dia.Validator;
   productsStencil: ui.Stencil;
+  snaplines: ui.Snaplines;
+  navigator: ui.Navigator;
   title = 'planogram';
   selectedCellView: dia.CellView | null;
   zoomScale = 50;
@@ -52,11 +55,68 @@ export class AppComponent implements OnInit, AfterViewInit {
                 height: 310,
                 name: 'chips3',
                 image: "https://assets-staging.nail-biter.com/client_337/product_105/images/19977.png"
-            }
+            },
+            {
+                product_id: 4,
+                width: 150,
+                height: 250,
+                name: 'chips1',
+                image: 'https://assets-staging.nail-biter.com/client_337/product_115/images/66744.png'
+            },
+            {
+                product_id: 5,
+                width: 200,
+                height: 290,
+                name: 'chips2',
+                image: 'https://assets-staging.nail-biter.com/client_337/product_116/images/40527.png'
+            },
+            {
+                product_id: 6,
+                width: 146,
+                height: 190,
+                name: 'chips3',
+                image: 'https://assets-staging.nail-biter.com/client_337/product_114/images/75826.png'
+            },
+            {
+                product_id: 7,
+                width: 47,
+                height: 151,
+                name: 'chips1',
+                image: "https://assets-staging.nail-biter.com/client_345/product_92/images/108622.png"
+            },
+            {
+                product_id: 8,
+                width: 238,
+                height: 318,
+                name: 'chips2',
+                image: "https://assets-staging.nail-biter.com/client_345/product_94/images/1031050.png"
+            },
+            {
+                product_id: 9,
+                width: 59,
+                height: 100,
+                name: 'chips3',
+                image: "https://assets-staging.nail-biter.com/client_345/product_93/images/70278.png"
+            },
+            {
+                product_id: 10,
+                width: 200,
+                height: 75,
+                name: 'chips3',
+                image: "https://assets-staging.nail-biter.com/client_337/product_118/images/01902.png"
+            },
+            {
+                product_id: 10,
+                width: 66,
+                height: 102,
+                name: 'chips3',
+                image: "https://assets-staging.nail-biter.com/client_345/product_2/images/09928.png"
+            },
         ],
     }
 }
   productCategories: Record<string, string> = {};
+  planogramMode : 'readonly' | 'edit';
   constructor() {}
 
   ngOnInit() {
@@ -174,7 +234,6 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
     var paper = this.paper
     this.scroller = new ui.PaperScroller({
-      // @ts-ignore
       paper,
       autoResizePaper: true,
       cursor: 'grab',
@@ -182,7 +241,9 @@ export class AppComponent implements OnInit, AfterViewInit {
       baseHeight: 400,
       scrollWhileDragging: true,
       contentOptions: {
-        allowNewOrigin: 'any', padding: 1, // maxWidth: 2500,
+        allowNewOrigin: 'any',
+        padding: 1,
+        // maxWidth: 2500,
         // maxHeight: 2500
       }
     });
@@ -218,6 +279,21 @@ export class AppComponent implements OnInit, AfterViewInit {
         } as layout.GridLayout.Options);
       },
 
+    });
+    this.snaplines = new ui.Snaplines({
+        paper: paper,
+      // @ts-ignore
+        filter: function (element: ProductElement|ShelfElement) {
+            return element.attributes['type'] === 'app.Product';
+        }
+    })
+    this.snaplines.startListening();
+    this.navigator = new ui.Navigator({
+        paperScroller: this.scroller,
+        width: 300,
+        height: 200,
+        padding: 10,
+        zoomOptions: {max: 2, min: 0.4}
     });
   }
 
@@ -341,6 +417,9 @@ export class AppComponent implements OnInit, AfterViewInit {
     };
     this.productsStencil.on(stencilEventMap(this.productsStencil));
     this.zoomCanvas(this.zoomScale);
+    // init navigator
+     this.navigator.$el.appendTo('#navigator');
+    this.navigator.render();
   }
 
   emitGraph() {
@@ -387,5 +466,18 @@ export class AppComponent implements OnInit, AfterViewInit {
     } else {
       this.commandManager.redo();
     }
+  }
+
+  clearGraph() {
+    this.graph.clear();
+  }
+  fullScreen(ele: Element){
+    util.toggleFullScreen(ele)
+  }
+
+  togglePaperInteractivity(flag:boolean){
+    this.paper.setInteractivity(flag);
+    this.planogramMode = 'readonly'
+    removeElementTools(this.paper);
   }
 }

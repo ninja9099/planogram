@@ -1,8 +1,10 @@
 <router-outlet></router-outlet>
-<button (click)="addShelf('TOP')">Add</button>
-<div class="container">
+<div id="container" class="container" #container>
     <div id="products-stencil" #stencilElement></div>
     <div id="canvas"  #canvas (wheel)="handleMouseZoom($event)"></div>
-    <div id="shelves-stencil"  #shelvesStencilElement></div>
+    <div id="navigator" style="z-index:1;position: absolute;right: 30px; bottom: 30px;"></div>
+    <div class="slidecontainer">
+        <input type="range" (change)="handleSliderZoom($event)" id="zoomSlider" value="50" name="zoomSlider" min="20" max="500" step="20" class="input">
+    </div>
 
 </div>

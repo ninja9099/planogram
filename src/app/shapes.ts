@@ -11,6 +11,7 @@ export interface Product {
     height: number;
     name: string;
     image: string;
+    product_id: number;
 }
 
 export enum ShelfTypes {
@@ -276,11 +277,22 @@ export class ProductElement extends dia.Element {
     }
 
     static create(product: Product): ProductElement {
-        const { name, width, height, image } = product;
+         let {name, width, height, image, product_id} = product;
+        let aspectRatio = product.width/product.height;
+        // let stencilProductSize = { width: 90 * aspectRatio , height: 90};
+        let scale = 3;
+        if(width < 120 || height < 120){
+            scale = 1.5;
+        }
+        let stencilProductSize = { width: Math.floor(width/scale) , height: Math.floor(height/scale)};
+
         return new this({
             productType: name,
-            productSize: { width, height },
-            size: calcSize(product),
+            originalSize : {width, height},
+            productSize: stencilProductSize,
+            paperSize:  {width, height},
+            productId: product_id,
+            size: calcSize(stencilProductSize),
             attrs: {
                 body: {
                     productImage: image

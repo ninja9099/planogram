@@ -258,11 +258,11 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.buidlProductCategories(Object.keys(this.productCatalouge.products))
     this.productsStencil = new ui.Stencil({
       paper: this.scroller,
-      width: 240,
+      width: 300,
       scaleClones: true,
       dropAnimation: true,
       usePaperGrid: true,
-      theme: 'modern',
+      theme: 'default',
       groups: this.createStencilGroups(this.productCatalouge.products),
       paperOptions: () => {
         return {
@@ -311,7 +311,9 @@ export class AppComponent implements OnInit, AfterViewInit {
       const groups = {};
       const layout = (columnsCount: number): layout.GridLayout.Options => {
         return {
-          columns: columnsCount, columnWidth: 200 / columnsCount, rowHeight: 'compact'
+          columns: columnsCount,
+          columnWidth: 300 / columnsCount,
+          rowHeight: 'compact'
         }
       };
 
@@ -319,8 +321,10 @@ export class AppComponent implements OnInit, AfterViewInit {
         const maxWidth = products[categoryName].reduce((acc, product) => Math.max(acc, product.width), 0);
         // @ts-ignore
         groups[categoryName] = {
-          layout: layout(5 - maxWidth), closed: idx > 3, index: idx + 1, // @ts-ignore
-          label: this.productCategories[categoryName].toLowerCase()
+          layout: layout(3),
+          closed: idx > 3,
+          index: idx + 1, // @ts-ignore
+          label: this.productCategories[categoryName].toLowerCase() + ` - (${products[categoryName].length})`
         };
       });
       return groups;

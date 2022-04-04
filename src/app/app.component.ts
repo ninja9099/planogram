@@ -1,24 +1,32 @@
 import {
-  AfterViewInit, Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild, ViewEncapsulation
+  AfterViewInit,
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  ViewChild,
+  ViewEncapsulation
 } from '@angular/core';
 import {dia, layout, shapes, ui, util, V} from '@clientio/rappid';
-import {
-  getAllProducts, getAllShelves, Product, ProductElement, ShelfElement, storeItemsConfig
-} from "./shapes";
-import {validateChangePosition, validateChangeSize, isSizeValid, isPositionValid} from './validators';
+import {getAllProducts, getAllShelves, Product, ProductElement, ShelfElement, storeItemsConfig} from "./shapes";
+import {isPositionValid, isSizeValid, validateChangePosition, validateChangeSize} from './validators';
 import {addElementTools, removeElementTools} from "./tools";
 import *  as  graphData from '../assets/example.json';
 
 @Component({
-  selector: 'app-root', templateUrl: './app.component.html', styleUrls: ['./app.component.scss'],
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit, AfterViewInit {
 
   @ViewChild('canvas') canvas: ElementRef;
   @ViewChild('stencilElement') stencilElement: ElementRef;
   @ViewChild('shelvesStencilElement') shelvesStencilElement: ElementRef;
-  @Input() Products: Record<string, Product[]>;
-  @Input() graphData: object;
+  @Input() Products!: Record<string, Product[]>;
+  @Input() graphData!: object;
   @Output() graphJson: EventEmitter<any> = new EventEmitter();
   @Output() toSVG: EventEmitter<any> = new EventEmitter();
   graph: dia.Graph;
@@ -292,7 +300,11 @@ export class AppComponent implements OnInit, AfterViewInit {
           element.set('size', {width, height})
           // element.attr('image/xlinkHref', el.attributes.attrs.body.productImage);
           return element
-          }
+          },
+          // @ts-ignore
+      search: (product: ProductElement, keyword: string, group: string) => {
+            return product.match(group, keyword);
+        }
     });
     this.snaplines = new ui.Snaplines({
         paper: paper,

@@ -23,12 +23,12 @@ export function addElementTools(cellView: dia.CellView): void {
     } else {
         switch (cell.get('shelfType')) {
             case ShelfTypes.full: {
-                padding =  { left: 7, top: 37, right: 7, bottom: 22 };
+                padding =  { left: 7, top: 20, right: 7, bottom: 22 };
                 offset = { x: 20, y: -50 };
                 break;
             }
             case ShelfTypes.top: {
-                padding =  { left: 7, top: 37, right: 7, bottom: 7 };
+                padding =  { left: 7, top: 20, right: 7, bottom: 7 };
                 offset = { x: 20, y: -50 };
                 break;
             }
@@ -52,7 +52,7 @@ export function addElementTools(cellView: dia.CellView): void {
         resizeGrid,
         allowRotation: false,
         padding,
-        theme: 'default'
+        theme: 'modern'
     });
 
     const toolsView = new dia.ToolsView({
